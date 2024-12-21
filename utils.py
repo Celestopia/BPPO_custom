@@ -16,6 +16,9 @@ def orthogonal_initWeights(
 def log_prob_func(
     dist: Distribution, action: torch.Tensor
     ) -> torch.Tensor:
+    '''
+    Seemingly used to calculate the log probability of actions
+    '''
     log_prob = dist.log_prob(action)
     if len(log_prob.shape) == 1:
         return log_prob

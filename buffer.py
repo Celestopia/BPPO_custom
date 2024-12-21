@@ -38,7 +38,7 @@ class OnlineReplayBuffer:
         self._size = 0
 
 
-    def store(
+    def store( # 似乎没有用到 # Seemingly not used
         self,
         s: np.ndarray,
         a: np.ndarray,
@@ -67,7 +67,7 @@ class OnlineReplayBuffer:
             pre_return = self._return[i]
 
 
-    def compute_advantage(
+    def compute_advantage( # 似乎没有用到 # Seemingly not used
         self, gamma:float, lamda: float, value
     ) -> None:
         delta = np.zeros_like(self._reward)
@@ -75,7 +75,7 @@ class OnlineReplayBuffer:
         pre_value = 0
         pre_advantage = 0
 
-        for i in tqdm(reversed(range(self._size)), 'Computing the advantage'):
+        for i in tqdm(reversed(range(self._size)), desc='Computing the advantage'):
             current_state = torch.FloatTensor(self._state[i]).to(self._device)
             current_value = value(current_state).cpu().data.numpy().flatten()
 
@@ -91,7 +91,9 @@ class OnlineReplayBuffer:
     def sample(
         self, batch_size: int
     ) -> tuple:
-
+        '''
+        Return a batch of data from this replay buffer.
+        '''
         ind = np.random.randint(0, self._size, size=batch_size)
 
         return (
@@ -133,7 +135,9 @@ class OfflineReplayBuffer(OnlineReplayBuffer):
     def normalize_state(
         self
     ) -> tuple:
-
+        '''
+        Normalize the state and next_state of this offline replay buffer.
+        '''
         mean = self._state.mean(0, keepdims=True)
         std = self._state.std(0, keepdims=True) + CONST_EPS
         self._state = (self._state - mean) / std

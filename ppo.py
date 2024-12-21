@@ -66,6 +66,12 @@ class ProximalPolicyOptimization:
         self,
         advantage: torch.Tensor
     ) -> torch.Tensor:
+        '''
+        Return the weighted advantage.
+
+        For advantage>0: weight = self._omega
+        For advantage<0: weight = 1-self._omega
+        '''
         if self._omega == 0.5:
             return advantage
         else:
@@ -84,6 +90,9 @@ class ProximalPolicyOptimization:
         value: ValueLearner,
         is_clip_decay: bool,
     ) -> torch.Tensor:
+        '''
+        Calculate the loss on a batch of data from the replay buffer.
+        '''
         # -------------------------------------Advantage-------------------------------------
         s, a, _, _, _, _, _, advantage = replay_buffer.sample(self._batch_size)
         old_dist = self._old_policy(s)
@@ -92,28 +101,31 @@ class ProximalPolicyOptimization:
         
         new_log_prob = log_prob_func(new_dist, a)
         old_log_prob = log_prob_func(old_dist, a)
-        ratio = (new_log_prob - old_log_prob).exp()
+        ratio = (new_log_prob - old_log_prob).exp() # The probability ratio between new and old policy, $\frac{\pi(a|s)}{\pi_k(a|s)}$
         
         advantage = self.weighted_advantage(advantage)
 
-        loss1 =  ratio * advantage 
+        loss1 =  ratio * advantage # $\frac{\pi(a|s)}{\pi_k(a|s)}A_{\pi_k}(s,a)$, as proposed in the original paper.
 
         if is_clip_decay:
             self._clip_ratio = self._clip_ratio * self._decay
         else:
             self._clip_ratio = self._clip_ratio
 
-        loss2 = torch.clamp(ratio, 1 - self._clip_ratio, 1 + self._clip_ratio) * advantage 
+        loss2 = torch.clamp(ratio, 1 - self._clip_ratio, 1 + self._clip_ratio) * advantage # $CLIP\left(\frac{\pi(a|s)}{\pi_k(a|s)}, 1-\epsilon, 1+\epsilon\right)A_{\pi_k}(s,a)$, as proposed in the original paper.
 
         entropy_loss = new_dist.entropy().sum(-1, keepdim=True) * self._entropy_weight
         
         loss = -(torch.min(loss1, loss2) + entropy_loss).mean()
-
+        '''
+        In the original paper, we want to maximize the objective function.
+        Since pytorch optimizer minimize the objective function, we take the negative of the objective function.
+        '''
         return loss
 
 
     def update(
-        self, 
+        self,
         replay_buffer: OnlineReplayBuffer,
         Q: QLearner,
         value: ValueLearner,
@@ -153,6 +165,9 @@ class ProximalPolicyOptimization:
         std: np.ndarray,
         eval_episodes: int=10
         ) -> float:
+        '''
+        Evaluate the model on several episodes of the environment. The number of episodes is specified by `eval_episodes`.
+        '''
         env = env_tools.load_env(env_name)
         #env.seed(seed)
         '''
@@ -187,4 +202,7 @@ class ProximalPolicyOptimization:
     def set_old_policy(
         self,
     ) -> None:
+        '''
+        Set the old policy to the current policy
+        '''
         self._old_policy.load_state_dict(self._policy.state_dict())

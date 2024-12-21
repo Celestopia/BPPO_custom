@@ -39,11 +39,11 @@ class ValueLearner:
     def update(
         self, replay_buffer: OnlineReplayBuffer
     ) -> float:
-        s, _, _, _, _, _, Return, _ = replay_buffer.sample(self._batch_size)
+        s, _, _, _, _, _, Return, _ = replay_buffer.sample(self._batch_size) # get state and return from replay buffer, with a batch size of self._batch_size.
         value_loss = F.mse_loss(self._value(s), Return)
 
         self._optimizer.zero_grad()
-        value_loss.backward()
+        value_loss.backward() # Backpropagate the loss to update Value learner network parameters.
         self._optimizer.step()
 
         return value_loss.item()
@@ -115,7 +115,7 @@ class QLearner:
     def loss(
         self, replay_buffer: OnlineReplayBuffer, pi
     ) -> torch.Tensor:
-        raise NotImplementedError
+        raise NotImplementedError # To be implemented by child classes: QSarsaLearner and QPiLearner
 
 
     def update(
@@ -127,9 +127,12 @@ class QLearner:
         self._optimizer.step()
 
         self._total_update_step += 1
-        if self._total_update_step % self._target_update_freq == 0:
+        if self._total_update_step % self._target_update_freq == 0: # After a certain period, update the target network. The default target_update_freq is 2.
             for param, target_param in zip(self._Q.parameters(), self._target_Q.parameters()):
-                target_param.data.copy_(self._tau * param.data + (1 - self._tau) * target_param.data)
+                target_param.data.copy_(
+                    self._tau * param.data
+                    + (1 - self._tau) * target_param.data
+                    ) # Update the target network parameters using moving average. tau is a hyperparameter that controls the updating speed. The default tau is 0.005.
 
         return Q_loss.item()
 
@@ -181,7 +184,7 @@ class QSarsaLearner(QLearner):
     def loss(
         self, replay_buffer: OnlineReplayBuffer, pi
     ) -> torch.Tensor:
-        s, a, r, s_p, a_p, not_done, _, _ = replay_buffer.sample(self._batch_size)
+        s, a, r, s_p, a_p, not_done, _, _ = replay_buffer.sample(self._batch_size) # get state, action, reward, next state, next action, and done flag from replay buffer, with a batch size of self._batch_size.
         with torch.no_grad():
             target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)
         
@@ -223,7 +226,7 @@ class QPiLearner(QLearner):
     def loss(
         self, replay_buffer: OnlineReplayBuffer, pi
     ) -> torch.Tensor:
-        s, a, r, s_p, _, not_done, _, _ = replay_buffer.sample(self._batch_size)
+        s, a, r, s_p, _, not_done, _, _ = replay_buffer.sample(self._batch_size) # get state, action, reward, next state, and done flag from replay buffer, with a batch size of self._batch_size.
         a_p = pi.select_action(s_p, is_sample=True)
         with torch.no_grad():
             target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)

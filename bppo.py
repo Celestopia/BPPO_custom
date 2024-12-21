@@ -157,7 +157,7 @@ class BehaviorProximalPolicyOptimization(ProximalPolicyOptimization):
         old_dist = self._old_policy(s)
         a = old_dist.rsample()
         advantage = Q(s, a) - value(s)
-        advantage = (advantage - advantage.mean()) / (advantage.std() + CONST_EPS)
+        advantage = (advantage - advantage.mean()) / (advantage.std() + CONST_EPS) # Normalized advantage
         # -------------------------------------Advantage-------------------------------------
         new_dist = self._policy(s)
 

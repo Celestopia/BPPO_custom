@@ -4,14 +4,6 @@ from torch.distributions import Normal
 from typing import Tuple
 
 
-def soft_clamp(
-    x: torch.Tensor, bound: tuple
-    ) -> torch.Tensor:
-    low, high = bound
-    #x = torch.tanh(x)
-    x = low + 0.5 * (high - low) * (x + 1)
-    return x
-
 
 def MLP(
     input_dim: int,
@@ -36,6 +28,13 @@ def MLP(
 
 
 class ValueMLP(nn.Module):
+    '''
+    A MLP with:
+    - A input layer: (batch_size, state_dim)
+    - Several hidden layers: (batch_size, hidden_dim); "Several"=depth-1
+    - A output layer: (batch_size, 1)
+    All layers are ReLU activated.
+    '''
     _net: torch.nn.modules.container.Sequential
 
     def __init__(
@@ -52,6 +51,13 @@ class ValueMLP(nn.Module):
 
 
 class QMLP(nn.Module):
+    '''
+    A MLP with:
+    - A input layer: (batch_size, state_dim+action_dim)
+    - Several hidden layers: (batch_size, hidden_dim); "Several"=depth-1
+    - A output layer: (batch_size, 1)
+    All layers are ReLU activated.
+    '''
     _net: torch.nn.modules.container.Sequential
 
     def __init__(
@@ -70,6 +76,15 @@ class QMLP(nn.Module):
 
 
 class GaussPolicyMLP(nn.Module):
+    '''
+    A MLP with:
+    - A input layer: (batch_size, state_dim)
+    - Several hidden layers: (batch_size, hidden_dim); "Several"=depth-1
+    - Two output layers: (batch_size, action_dim) and (batch_size, action_dim); The two represent the mean and log_std of the Gaussian distribution respectively.
+    All layers are ReLU activated, except the output layers with tanh activation.
+
+    The return is a torch.distributions.Normal object, which can be used to sample actions and compute log probabilities.
+    '''
     _net: torch.nn.modules.container.Sequential
     _log_std_bound: tuple
 
@@ -87,7 +102,12 @@ class GaussPolicyMLP(nn.Module):
     ) -> torch.distributions:
 
         mu, log_std = self._net(s).chunk(2, dim=-1)
-        log_std = soft_clamp(log_std, self._log_std_bound)
+        def soft_clamp(x: torch.Tensor, bound: tuple) -> torch.Tensor:
+            low, high = bound
+            #x = torch.tanh(x)
+            x = low + 0.5 * (high - low) * (x + 1)
+            return x
+        log_std = soft_clamp(log_std, self._log_std_bound) # The log_std is clamped to be within (-5, 0) to prevent numerical instability.
         std = log_std.exp()
 
         dist = Normal(mu, std)
