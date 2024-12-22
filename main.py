@@ -32,19 +32,19 @@ np.random.seed(seed)
 N=100 # Number of trajectories to collect for offline dataset
 
 # For Value
-v_steps=int(2e6)/1000
-v_hidden_dim = 512
+v_steps=int(500)
+v_hidden_dim = 256
 v_depth = 3
 v_lr = 1e-4
-v_batch_size = 512
+v_batch_size = 64
 
 # For Q
-q_bc_steps=int(2e6)/1000
+q_bc_steps=int(500)
 q_pi_steps=10 # Number of steps to update Q-network in each iteration. Only used if is_offpolicy_update=True.
-q_hidden_dim = 1024
-q_depth = 2
+q_hidden_dim = 256
+q_depth = 3
 q_lr = 1e-4
-q_batch_size = 512
+q_batch_size = 64
 target_update_freq=2
 tau=0.005 # Soft update rate for target Q network parameters. See Q_learner.update()
 gamma=0.99 # Discount factor for calculating the return.
@@ -53,18 +53,18 @@ is_offpolicy_update=False # Whether to use advantage replacement (as proposed in
 # If True, only update the Q-network parameters once, and keep using this Q-network.
 
 # For BC
-bc_steps=int(5e5)/1000
+bc_steps=int(500)
 bc_lr = 1e-4
-bc_hidden_dim = 1024
-bc_depth = 2
-bc_batch_size = 512
+bc_hidden_dim = 256
+bc_depth = 3
+bc_batch_size = 64
 
 # For BPPO
-bppo_steps=int(1e3)/1000
-bppo_hidden_dim = 1024
-bppo_depth = 2
+bppo_steps=int(100)
+bppo_hidden_dim = 256
+bppo_depth = 3
 bppo_lr = 1e-4
-bppo_batch_size = 512
+bppo_batch_size = 64
 clip_ratio=0.25 # PPO clip ratio. The probability ratio between new and old policy is clipped to be in the range [1-clip_ratio, 1+clip_ratio]
 entropy_weight=0.00 # Weight of entropy loss in PPO and BPPO. Can be set to 0.01 for medium tasks.
 decay=0.96 # Decay rate of PPO clip ratio
@@ -232,7 +232,7 @@ for step in tqdm(range(int(bppo_steps)), desc='bppo updating ......'):
     if step > 200:
         is_clip_decay = False
         is_bppo_lr_decay = False
-    bppo_loss = bppo.update(replay_buffer, Q, value, is_clip_decay, is_bppo_lr_decay)
+    bppo_loss = bppo.update(replay_buffer, Q, value, is_clip_decay, is_bppo_lr_decay) # Update policy network
     current_bppo_score = bppo.offline_evaluate(env_name, seed, mean, std) # J_{\pi k}
     if current_bppo_score > best_bppo_score:
         best_bppo_score = current_bppo_score

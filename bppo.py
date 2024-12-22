@@ -74,14 +74,12 @@ class BehaviorCloning:
 
     def offline_evaluate(
         self,
-        env_name: str,
+        env: object,
         seed: int,
         mean: np.ndarray,
         std: np.ndarray,
         eval_episodes: int=10
         ) -> float:
-        env = env_tools.load_env(env_name)
-        #env.seed(seed)
 
         total_reward = 0
         for _ in range(eval_episodes):
