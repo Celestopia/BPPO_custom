@@ -1,5 +1,4 @@
 #import gym
-import env_tools
 import torch
 import numpy as np
 from copy import deepcopy
@@ -153,35 +152,32 @@ class ProximalPolicyOptimization:
         else:    
             action = dist.mean
         # clip 
-        action = action.clamp(-1., 1.)
+        #action = action.clamp(-1., 1.)
         return action
     
 
     def evaluate(
         self,
-        env_name: str,
+        env: object,
         seed: int,
-        mean: np.ndarray,
-        std: np.ndarray,
         eval_episodes: int=10
         ) -> float:
         '''
         Evaluate the model on several episodes of the environment. The number of episodes is specified by `eval_episodes`.
         '''
-        env = env_tools.load_env(env_name)
         #env.seed(seed)
-        '''
+        
         total_reward = 0
         for _ in range(eval_episodes):
             s, done = env.reset(), False
             while not done:
-                s = torch.FloatTensor((np.array(s).reshape(1, -1) - mean) / std).to(self._device)
-                a = self.select_action(s, is_sample=False).cpu().data.numpy().flatten()
-                s, r, done, _ = env.step(a)
+                #s = torch.FloatTensor((np.array(s).reshape(1, -1) - mean) / std).to(self._device)
+                a = self.select_action(torch.FloatTensor(s).unsqueeze(0).to(self._device), is_sample=False).cpu().data.numpy().flatten()
+                s, r, done = env.step(a)
                 total_reward += r
         
-        avg_reward = total_reward / eval_episodes'''
-        return 1
+        avg_reward = total_reward / eval_episodes
+        return avg_reward
 
 
     def save(

@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 np.random.seed(100)
 
 # Function to initialize u(x, 0) as a Gaussian, now centered around 0
-def generate_initial_u(x):
+def generate_initial_y(x):
     """
     Generate the initial state u(0, x) as a superposition of two Gaussian functions.
     """
@@ -69,7 +69,7 @@ nu = 0.01  # Kinematic viscosity
 
 
 x = np.linspace(*x_range, nx) # Initialize the spatial grid
-y = generate_initial_u(x) # Set the initial condition
+y = generate_initial_y(x) # Set the initial condition
 
 
 

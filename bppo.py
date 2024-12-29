@@ -1,4 +1,3 @@
-import env_tools
 import torch
 import numpy as np
 from buffer import OnlineReplayBuffer
@@ -65,10 +64,8 @@ class BehaviorCloning:
         dist = self._policy(s)
         if is_sample:
             action = dist.sample()
-        else:    
+        else:
             action = dist.mean
-        # clip 
-        action = action.clamp(-1., 1.)
         return action
 
 
@@ -76,27 +73,19 @@ class BehaviorCloning:
         self,
         env: object,
         seed: int,
-        mean: np.ndarray,
-        std: np.ndarray,
         eval_episodes: int=10
         ) -> float:
-
         total_reward = 0
         for _ in range(eval_episodes):
-            s, done = env.reset()[0], False
-            #print("!!!!!s:", type(s), s.shape, type(mean), mean.shape, type(std), std.shape)
+            s, done = env.reset(), False
             while not done:
-                s = torch.FloatTensor((np.array(s).reshape(1, -1) - mean / std).reshape(1, -1)).to(self._device)
-                a = self.select_action(s, is_sample=False).cpu().data.numpy().flatten()
-                s, r, done = env.step(torch.FloatTensor(a).to(self._device))
+                #s = torch.FloatTensor((np.array(s).reshape(1, -1) - mean) / std).to(self._device)
+                a = self.select_action(torch.FloatTensor(s).unsqueeze(0).to(self._device), is_sample=False).cpu().data.numpy().flatten()
+                s, r, done = env.step(a)
                 total_reward += r
         
         avg_reward = total_reward / eval_episodes
-        #d4rl_score = env.get_normalized_score(avg_reward) * 100
-        #return d4rl_score
-        print("@@@@!!!!Average Reward:", avg_reward)
-        return 1
-    
+        return avg_reward
 
     def save(
         self, path: str
@@ -183,13 +172,11 @@ class BehaviorProximalPolicyOptimization(ProximalPolicyOptimization):
 
     def offline_evaluate(
         self,
-        env_name: str,
+        env: object,
         seed: int,
-        mean: np.ndarray,
-        std: np.ndarray,
         eval_episodes: int=10
         ) -> float:
-        env=env_tools.load_env(env_name)
-        avg_reward = self.evaluate(env_name, seed, mean, std, eval_episodes)
+        avg_reward = self.evaluate(env, seed, eval_episodes)
+        return avg_reward
         #d4rl_score = env.get_normalized_score(avg_reward) * 100
-        return 1
+        #return 1
