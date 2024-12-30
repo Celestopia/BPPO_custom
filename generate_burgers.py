@@ -269,65 +269,7 @@ def visualize_state_trajectory(x, Y, dt, nt, frame_interval=20):
     plt.legend()
     plt.show()
 
-#if __name__ == '__main__': # You can directly run this file for testing. Jupyter notebook may not work, .py is recommended.
-#    # Hyperparameters (can be adjusted manually)
-#    x_range=(0,1) # Spatial grid domain of the burgers equation
-#    nt=10000 # Number of time steps
-#    dt=1e-4 # Temporal interval
-#    nx=128 # Number of spatial nodes (grid points)
-#    dx=1/128 # Spatial interval
-#    frame_interval=2 # Frame interval of the animation (in milliseconds)
-#
-#    # Generate a single trajectory and visualize it
-#    x=np.linspace(*x_range,nx) # Spatial grid for the Burgers equation
-#    y0=generate_initial_y(x)
-#    state_trajectory, _, _, _, _, _ = get_trajectory(y0,nt=nt,dt=dt,nx=nx,dx=(x_range[1]-x_range[0])/nx)
-#    visualize_state_trajectory(x, state_trajectory, dt, nt, frame_interval) # Show the animation of the state evolution.
-#    
-#    # Below are functions for testing and debugging.
-#    def visualize_node_values(state_trajectory):
-#        '''
-#        A test function.
-#        Visualize the value evolution at some certain spatial nodes.
-#        '''
-#        plt.figure(figsize=(9,6))
-#        plt.title("Burgers equation solution at certain spatial nodes")
-#        plt.xlabel("t")
-#        plt.ylabel("u(x,t)")
-#        plt.plot(state_trajectory[:,16], label="Node 16")
-#        plt.plot(state_trajectory[:,32], label="Node 32")
-#        plt.plot(state_trajectory[:,64], label="Node 64")
-#        plt.plot(state_trajectory[:,96], label="Node 96")
-#        plt.plot(state_trajectory[:,112], label="Node 112")
-#        plt.legend()
-#        plt.show()
-#    
-#    def visualize_curves_at_different_time_steps(state_trajectory):
-#        '''
-#        A test function.
-#        Visualize the curves at different time steps (in a static plot)
-#        '''
-#        plt.figure(figsize=(9,6))
-#        plt.title("Burgers equation solution at different time steps")
-#        plt.xlabel("x")
-#        plt.ylabel("u(x,t)")
-#        plt.plot(state_trajectory[0,:], label="Initial state")
-#        plt.plot(state_trajectory[1000,:], label="1000th time step")
-#        plt.plot(state_trajectory[2000,:], label="2000th time step")
-#        plt.plot(state_trajectory[3000,:], label="3000th time step")
-#        plt.plot(state_trajectory[4000,:], label="4000th time step")
-#        plt.plot(state_trajectory[5000,:], label="5000th time step")
-#        plt.plot(state_trajectory[6000,:], label="6000th time step")
-#        plt.plot(state_trajectory[7000,:], label="7000th time step")
-#        plt.plot(state_trajectory[8000,:], label="8000th time step")
-#        plt.plot(state_trajectory[9000,:], label="9000th time step")
-#        plt.plot(state_trajectory[-1,:], label="Final state")
-#        plt.legend()
-#        plt.show()
-#    
-#    visualize_node_values(state_trajectory)
-#    visualize_curves_at_different_time_steps(state_trajectory)
-
+# ---------------------------------------------------------------------------------------------------------------------------
 
 
 # The following code is a specific implementation of code used in the main script. The logic is basically the same as get_trajectory().
@@ -455,5 +397,72 @@ def load_burgers_data_sampled(
 
     return data_dict
 
+# ---------------------------------------------------------------------------------------------------------------------------
+
+
 if __name__ == '__main__':
     load_burgers_data_sampled(N=20,save_dir='./data123')
+
+
+# -------------------test----------------------------------------------
+# You can directly run this file for testing. Jupyter notebook may not work, .py is recommended.
+
+
+#if __name__ == '__main__':
+#    # Hyperparameters (can be adjusted manually)
+#    x_range=(0,1) # Spatial grid domain of the burgers equation
+#    nt=10000 # Number of time steps
+#    dt=1e-4 # Temporal interval
+#    nx=128 # Number of spatial nodes (grid points)
+#    dx=1/128 # Spatial interval
+#    frame_interval=2 # Frame interval of the animation (in milliseconds)
+#
+#    # Generate a single trajectory and visualize it
+#    x=np.linspace(*x_range,nx) # Spatial grid for the Burgers equation
+#    y0=generate_initial_y(x)
+#    state_trajectory, _, _, _, _, _ = get_trajectory(y0,nt=nt,dt=dt,nx=nx,dx=(x_range[1]-x_range[0])/nx)
+#    visualize_state_trajectory(x, state_trajectory, dt, nt, frame_interval) # Show the animation of the state evolution.
+#    
+#    # Below are functions for testing and debugging.
+#    def visualize_node_values(state_trajectory):
+#        '''
+#        A test function.
+#        Visualize the value evolution at some certain spatial nodes.
+#        '''
+#        plt.figure(figsize=(9,6))
+#        plt.title("Burgers equation solution at certain spatial nodes")
+#        plt.xlabel("t")
+#        plt.ylabel("u(x,t)")
+#        plt.plot(state_trajectory[:,16], label="Node 16")
+#        plt.plot(state_trajectory[:,32], label="Node 32")
+#        plt.plot(state_trajectory[:,64], label="Node 64")
+#        plt.plot(state_trajectory[:,96], label="Node 96")
+#        plt.plot(state_trajectory[:,112], label="Node 112")
+#        plt.legend()
+#        plt.show()
+#    
+#    def visualize_curves_at_different_time_steps(state_trajectory):
+#        '''
+#        A test function.
+#        Visualize the curves at different time steps (in a static plot)
+#        '''
+#        plt.figure(figsize=(9,6))
+#        plt.title("Burgers equation solution at different time steps")
+#        plt.xlabel("x")
+#        plt.ylabel("u(x,t)")
+#        plt.plot(state_trajectory[0,:], label="Initial state")
+#        plt.plot(state_trajectory[1000,:], label="1000th time step")
+#        plt.plot(state_trajectory[2000,:], label="2000th time step")
+#        plt.plot(state_trajectory[3000,:], label="3000th time step")
+#        plt.plot(state_trajectory[4000,:], label="4000th time step")
+#        plt.plot(state_trajectory[5000,:], label="5000th time step")
+#        plt.plot(state_trajectory[6000,:], label="6000th time step")
+#        plt.plot(state_trajectory[7000,:], label="7000th time step")
+#        plt.plot(state_trajectory[8000,:], label="8000th time step")
+#        plt.plot(state_trajectory[9000,:], label="9000th time step")
+#        plt.plot(state_trajectory[-1,:], label="Final state")
+#        plt.legend()
+#        plt.show()
+#    
+#    visualize_node_values(state_trajectory)
+#    visualize_curves_at_different_time_steps(state_trajectory)
