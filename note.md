@@ -11,7 +11,7 @@ Ndata = u_data.shape[0]
 u_target = u_data[:, -1]
 
 # u_data shape: (Ndata, T, s) i.e. (Ndata, 11, 128)
-# f_data shape: (Ndata, T, s) i.e. (Ndata, 11, 128)
+# f_data shape: (Ndata, T, s) i.e. (Ndata, 10, 128)
 # u_target shape: (Ndata, s) i.e. (Ndata, 128)
 # u is the state, f is the action
 
@@ -41,3 +41,6 @@ action_dim = s
 ```
 
 So the "state" is a concatenated vector of real state, target state, and a scalar.
+
+
+以及上次讨论的时候发现它的数据集全都是二维的，例如state_trajectory的形状是(N, state_dim)，所以对训练的时候到底用了多少个trajectory有疑惑，现在大概看明白了，它把不同trajectory拼接在一起了，所以整个state数据集的形状是(N_trajectory*num_t_per_trajectory, state_dim*2+1)。这个数据集的第一个维度的不同指标代表不同样本（可以来自于不同轨迹），第二个维度代表特征，其中前128个数代表当前state（在grid上的函数值），接下来128个代表当前轨迹的目标值（在属于同一轨迹的样本间共享，所以state[0,128:256]=state[1,128:256]=...=state[9,128:256]；state[10,128:256]=state[11,128:256]=...=state[19,128:256]；...最后一个标量是代表时间点的，例如state[0,257]=0, state[5,257]=5, state[3426,257]=6...

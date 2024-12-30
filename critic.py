@@ -1,9 +1,7 @@
 import torch
 import torch.nn.functional as F
-
 from net import ValueMLP, QMLP
-from buffer import OnlineReplayBuffer
-
+from memory import ReplayMemory
 
 class ValueLearner:
     _device: torch.device
@@ -37,11 +35,16 @@ class ValueLearner:
 
 
     def update(
-        self, replay_buffer: OnlineReplayBuffer
+        self, memory: ReplayMemory
     ) -> float:
-        s, _, _, _, _, _, Return, _ = replay_buffer.sample(self._batch_size)
-        value_loss = F.mse_loss(self._value(s), Return)
-
+        state_batch, action_batch, reward_batch, next_state_batch = memory.sample(self._batch_size)
+        state_batch = torch.FloatTensor(state_batch).to(self._device)
+        next_state_batch = torch.FloatTensor(next_state_batch).to(self._device)
+        action_batch = torch.FloatTensor(action_batch).to(self._device)
+        reward_batch = torch.FloatTensor(reward_batch).to(self._device).unsqueeze(1)
+        
+        value_loss = F.mse_loss(self._value(state_batch), reward_batch)
+        
         self._optimizer.zero_grad()
         value_loss.backward()
         self._optimizer.step()
@@ -113,15 +116,15 @@ class QLearner:
 
 
     def loss(
-        self, replay_buffer: OnlineReplayBuffer, pi
+        self, memory: ReplayMemory, pi
     ) -> torch.Tensor:
         raise NotImplementedError
 
 
     def update(
-        self, replay_buffer: OnlineReplayBuffer, pi
+        self, memory: ReplayMemory, pi
     ) -> float:
-        Q_loss = self.loss(replay_buffer, pi)
+        Q_loss = self.loss(memory, pi)
         self._optimizer.zero_grad()
         Q_loss.backward()
         self._optimizer.step()
@@ -179,13 +182,19 @@ class QSarsaLearner(QLearner):
 
 
     def loss(
-        self, replay_buffer: OnlineReplayBuffer, pi
+        self, memory: ReplayMemory, pi
     ) -> torch.Tensor:
-        s, a, r, s_p, a_p, not_done, _, _ = replay_buffer.sample(self._batch_size)
-        with torch.no_grad():
-            target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)
+        state_batch, action_batch, reward_batch, next_state_batch = memory.sample(self._batch_size)
+        state_batch = torch.FloatTensor(state_batch).to(self._device)
+        next_state_batch = torch.FloatTensor(next_state_batch).to(self._device)
+        action_batch = torch.FloatTensor(action_batch).to(self._device)
+        reward_batch = torch.FloatTensor(reward_batch).to(self._device).unsqueeze(1)
         
-        Q = self._Q(s, a)
+        with torch.no_grad():
+            target_Q_value = reward_batch + 1 * self._gamma * self._target_Q(next_state_batch, action_batch)
+        
+        Q = self._Q(state_batch, action_batch)
+        
         loss = F.mse_loss(Q, target_Q_value)
         
         return loss
@@ -220,15 +229,15 @@ class QPiLearner(QLearner):
         )
 
 
-    def loss(
-        self, replay_buffer: OnlineReplayBuffer, pi
-    ) -> torch.Tensor:
-        s, a, r, s_p, _, not_done, _, _ = replay_buffer.sample(self._batch_size)
-        a_p = pi.select_action(s_p, is_sample=True)
-        with torch.no_grad():
-            target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)
-        
-        Q = self._Q(s, a)
-        loss = F.mse_loss(Q, target_Q_value)
-        
-        return loss
+    #def loss(
+    #    self, replay_buffer: OnlineReplayBuffer, pi
+    #) -> torch.Tensor:
+    #    s, a, r, s_p, _, not_done, _, _ = replay_buffer.sample(self._batch_size)
+    #    a_p = pi.select_action(s_p, is_sample=True)
+    #    with torch.no_grad():
+    #        target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)
+    #    
+    #    Q = self._Q(s, a)
+    #    loss = F.mse_loss(Q, target_Q_value)
+    #    
+    #    return loss

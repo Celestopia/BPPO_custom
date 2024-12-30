@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
 import tqdm
 import random
 '''
@@ -230,10 +229,6 @@ def load_burgers(
     print("Terminals shape: ", data_dict['terminals'].shape) # (N, nt)
     print("Timeouts shape: ", data_dict['timeouts'].shape) # (N, nt)
     print("Rewards shape: ", data_dict['rewards'].shape) # (N, nt)
-    #data_name = f'burger_{n}_{n}_{T-1}_{N}_{delta_t}.pkl'
-
-    #plt.plot(rewards[0])
-    #plt.show()
     
     return data_dict
 
@@ -274,67 +269,191 @@ def visualize_state_trajectory(x, Y, dt, nt, frame_interval=20):
     plt.legend()
     plt.show()
 
-if __name__ == '__main__': # You can directly run this file for testing. Jupyter notebook may not work, .py is recommended.
-    # Hyperparameters (can be adjusted manually)
-    x_range=(0,1) # Spatial grid domain of the burgers equation
-    nt=10000 # Number of time steps
-    dt=1e-4 # Temporal interval
-    nx=128 # Number of spatial nodes (grid points)
-    dx=1/128 # Spatial interval
-    frame_interval=2 # Frame interval of the animation (in milliseconds)
+#if __name__ == '__main__': # You can directly run this file for testing. Jupyter notebook may not work, .py is recommended.
+#    # Hyperparameters (can be adjusted manually)
+#    x_range=(0,1) # Spatial grid domain of the burgers equation
+#    nt=10000 # Number of time steps
+#    dt=1e-4 # Temporal interval
+#    nx=128 # Number of spatial nodes (grid points)
+#    dx=1/128 # Spatial interval
+#    frame_interval=2 # Frame interval of the animation (in milliseconds)
+#
+#    # Generate a single trajectory and visualize it
+#    x=np.linspace(*x_range,nx) # Spatial grid for the Burgers equation
+#    y0=generate_initial_y(x)
+#    state_trajectory, _, _, _, _, _ = get_trajectory(y0,nt=nt,dt=dt,nx=nx,dx=(x_range[1]-x_range[0])/nx)
+#    visualize_state_trajectory(x, state_trajectory, dt, nt, frame_interval) # Show the animation of the state evolution.
+#    
+#    # Below are functions for testing and debugging.
+#    def visualize_node_values(state_trajectory):
+#        '''
+#        A test function.
+#        Visualize the value evolution at some certain spatial nodes.
+#        '''
+#        plt.figure(figsize=(9,6))
+#        plt.title("Burgers equation solution at certain spatial nodes")
+#        plt.xlabel("t")
+#        plt.ylabel("u(x,t)")
+#        plt.plot(state_trajectory[:,16], label="Node 16")
+#        plt.plot(state_trajectory[:,32], label="Node 32")
+#        plt.plot(state_trajectory[:,64], label="Node 64")
+#        plt.plot(state_trajectory[:,96], label="Node 96")
+#        plt.plot(state_trajectory[:,112], label="Node 112")
+#        plt.legend()
+#        plt.show()
+#    
+#    def visualize_curves_at_different_time_steps(state_trajectory):
+#        '''
+#        A test function.
+#        Visualize the curves at different time steps (in a static plot)
+#        '''
+#        plt.figure(figsize=(9,6))
+#        plt.title("Burgers equation solution at different time steps")
+#        plt.xlabel("x")
+#        plt.ylabel("u(x,t)")
+#        plt.plot(state_trajectory[0,:], label="Initial state")
+#        plt.plot(state_trajectory[1000,:], label="1000th time step")
+#        plt.plot(state_trajectory[2000,:], label="2000th time step")
+#        plt.plot(state_trajectory[3000,:], label="3000th time step")
+#        plt.plot(state_trajectory[4000,:], label="4000th time step")
+#        plt.plot(state_trajectory[5000,:], label="5000th time step")
+#        plt.plot(state_trajectory[6000,:], label="6000th time step")
+#        plt.plot(state_trajectory[7000,:], label="7000th time step")
+#        plt.plot(state_trajectory[8000,:], label="8000th time step")
+#        plt.plot(state_trajectory[9000,:], label="9000th time step")
+#        plt.plot(state_trajectory[-1,:], label="Final state")
+#        plt.legend()
+#        plt.show()
+#    
+#    visualize_node_values(state_trajectory)
+#    visualize_curves_at_different_time_steps(state_trajectory)
 
-    # Generate a single trajectory and visualize it
-    x=np.linspace(*x_range,nx) # Spatial grid for the Burgers equation
-    y0=generate_initial_y(x)
-    state_trajectory, _, _, _, _, _ = get_trajectory(y0,nt=nt,dt=dt,nx=nx,dx=(x_range[1]-x_range[0])/nx)
-    visualize_state_trajectory(x, state_trajectory, dt, nt, frame_interval) # Show the animation of the state evolution.
+
+
+# The following code is a specific implementation of code used in the main script. The logic is basically the same as get_trajectory().
+def get_sampled_trajectory(
+        y0,
+        nt = 10000, # Number of time steps
+        dt= 0.01, # Temporal interval
+        nx = 128, # Number of spatial nodes (grid points)
+        dx = 1/128, # Spatial interval
+        t_sample_interval=1000, # The interval of time steps to generate a new control signal
+        ):
+    r'''
+    Generate a sampled trajectory of the Burgers equation.
+    Specifically, generate 10000 timesteps, with an interval of 0.0001. Change the control signal every 1000 timesteps. 
+
+    :param y0: (state_dim,), initial state vector
+    :param nx: number of spatial nodes (state dim)
+    :param nt: number of time steps
+    :param dx: spatial interval
+    :param dt: temporal interval
+    :param t_sample_interval: the interval of time steps to generate a new control signal
+
+    :return: state_trajectory, action_trajectory, final_state
+    '''
+
+    y_list = [] # Holds states from y_0 to y_{nt}
+    u_list = [] # Holds control sequence u_0 to u_{nt-1}
     
-    # Below are functions for testing and debugging.
-    def visualize_node_values(state_trajectory):
-        '''
-        A test function.
-        Visualize the value evolution at some certain spatial nodes.
-        '''
-        plt.figure(figsize=(9,6))
-        plt.title("Burgers equation solution at certain spatial nodes")
-        plt.xlabel("t")
-        plt.ylabel("u(x,t)")
-        plt.plot(state_trajectory[:,16], label="Node 16")
-        plt.plot(state_trajectory[:,32], label="Node 32")
-        plt.plot(state_trajectory[:,64], label="Node 64")
-        plt.plot(state_trajectory[:,96], label="Node 96")
-        plt.plot(state_trajectory[:,112], label="Node 112")
-        plt.legend()
-        plt.show()
+    y = y0 # Set the initial state
+    y_list.append(y) # Append the initial state to Y_bar
+
+    for t_idx in range(nt): # Iterate over time steps
+        if t_idx % t_sample_interval == 0: # Generate a new control signal every 1000 time steps
+            u=generate_control_sequence(y,t_idx*dt) # (n,), Control vector at time t_idx*dt
+        # Within every 1000 time steps, the control signal does not change.
+        y_new=burgers_update(y, u, dx, dt) # (n,), Updated state vector at time t_idx*dt, with control signal u
+        u_list.append(u) # Append u_{t_idx}
+        y_list.append(y_new) # Append y_bar_{t_idx+1}
+        y=y_new # Update y
     
-    def visualize_curves_at_different_time_steps(state_trajectory):
-        '''
-        A test function.
-        Visualize the curves at different time steps (in a static plot)
-        '''
-        plt.figure(figsize=(9,6))
-        plt.title("Burgers equation solution at different time steps")
-        plt.xlabel("x")
-        plt.ylabel("u(x,t)")
-        plt.plot(state_trajectory[0,:], label="Initial state")
-        plt.plot(state_trajectory[1000,:], label="1000th time step")
-        plt.plot(state_trajectory[2000,:], label="2000th time step")
-        plt.plot(state_trajectory[3000,:], label="3000th time step")
-        plt.plot(state_trajectory[4000,:], label="4000th time step")
-        plt.plot(state_trajectory[5000,:], label="5000th time step")
-        plt.plot(state_trajectory[6000,:], label="6000th time step")
-        plt.plot(state_trajectory[7000,:], label="7000th time step")
-        plt.plot(state_trajectory[8000,:], label="8000th time step")
-        plt.plot(state_trajectory[9000,:], label="9000th time step")
-        plt.plot(state_trajectory[-1,:], label="Final state")
-        plt.legend()
-        plt.show()
+    # Set the observations, actions, and final state
+    state_trajectory=np.stack(y_list[0:-1:t_sample_interval]) # (nt, state_dim), States from y_0 to y_{nt-1}, every 1000 time steps
+    action_trajectory=(np.stack(u_list[::t_sample_interval])) # (nt, state_dim), Control sequence from u_0 to u_{nt-1}, every 1000 time steps
+    final_state=y # (state_dim,), Final state y_{nt}
     
-    visualize_node_values(state_trajectory)
-    visualize_curves_at_different_time_steps(state_trajectory)
+    return state_trajectory, action_trajectory, final_state
 
 
+# The following code is a specific implementation of code used in the main script. The logic is basically the same as load_burgers().
+def load_burgers_data_sampled(
+        x_range=(0,1), # Spatial grid domain of the burgers equation
+        nt = 10000, # Number of time steps
+        nx = 128, # Number of spatial nodes (grid points)
+        dt= 0.0001, # Temporal interval
+        t_sample_interval=1000, # The interval of time steps to generate a new control signal
+        N = 3, # Number of samples (trajectories) to generate
+        save_dir=None, # Directory to save the data
+        ):
+    r'''
+    Load several trajectories of the Burgers equation.
 
+    x_range: the spatial grid domain of the burgers equation
+    nt: number of time steps
+    nx: number of spatial nodes (grid points)
+    dt: temporal interval
+    t_sample_interval: the interval of time steps to generate a new control signal
+    N: number of samples (trajectories) to generate
+    '''
+    dx = (x_range[1]-x_range[0])/nx # Calculate the spatial interval (assume equal spacing)
+    x = np.linspace(*x_range, nx) # Initialize the spatial grid
+    n = nx # state dimension. In this case, the state is all function values at the spatial grid points, so n=nx.
+    nt1 = nt//t_sample_interval # Number of time steps per trajectory (sampled)
 
+    Y_bar_list = [] # Holds states trajectories of N samples
+    Y_f_list = [] # Holds final state of N samples
+    U_list = [] # Holds control sequence trajectories of N samples
+    Y_bar_next_list = [] # Holds next state of N samples
 
+    # Simulate the system for N samples
+    for _ in tqdm.tqdm(range(N), desc="Generating trajectories"):
+        y0=generate_initial_y(x) # Set the initial condition
+        state_trajectory, action_trajectory, final_state=get_sampled_trajectory(y0, nt=nt, dt=dt, nx=nx, dx=dx, t_sample_interval=t_sample_interval) # Generate a single trajectory
 
+        Y_bar_list.append(state_trajectory) # Append the state trajectory to Y_bar_list
+        Y_f_list.append(final_state) # Append the final state to Y_f_list
+        U_list.append(action_trajectory) # Append the control sequence to U_list
+        Y_bar_next_list.append(np.concatenate([state_trajectory[1:,:], final_state[np.newaxis,:]], axis=0)) # Append the next state to Y_bar_next_list
+        
+    # Save the data into a dictionary
+    data_dict = { # d4rl API
+            'observations': np.stack(Y_bar_list), # (N, nt1, n)
+            'actions': np.stack(U_list), # (N, nt1, n)
+            'Y_f': np.stack(Y_f_list), # (N, n)
+            'next_observations': np.stack(Y_bar_next_list), # (N, nt1, n)
+            'meta_data': {
+                'spatial domain': x_range,
+                'num_nodes': nx,
+                'input_dim': nx,
+                'time interval': dt,
+                'num time steps': nt,
+                'num trajectories': N,
+                'time step sample interval': t_sample_interval,
+                'num samples per trajectory': nt1,
+            },
+        }
+    print("Observations shape: ", data_dict['observations'].shape) # (N, nt1, n)
+    print("Y_f shape: ", data_dict['Y_f'].shape) # (N, n)
+    print("Actions shape: ", data_dict['actions'].shape) # (N, nt1, n)
+    print("Next observations shape: ", data_dict['next_observations'].shape) # (N, nt1, n)
+
+    if save_dir is not None:
+        import os
+        import pickle
+        import time
+        if not os.path.exists(save_dir):
+            print(f"Directory {save_dir} does not exist. Creating it...")
+            os.makedirs(save_dir)
+            print(f"Created directory {save_dir}")
+        timestr = str(int(time.time()))
+        data_name = f'burgers_{N}_{nt1}_{n}_{timestr}.pkl'
+        save_path = os.path.join(save_dir, data_name)
+        with open(save_path, 'wb') as f:
+            pickle.dump(data_dict, f)
+            print(f"Burgers data saved to {save_path}")
+
+    return data_dict
+
+if __name__ == '__main__':
+    load_burgers_data_sampled(N=20,save_dir='./data123')
