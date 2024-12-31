@@ -401,7 +401,7 @@ def load_burgers_data_sampled(
 
 
 if __name__ == '__main__':
-    load_burgers_data_sampled(N=20,save_dir='./data123')
+    load_burgers_data_sampled(N=50,save_dir='./data123')
 
 
 # -------------------test----------------------------------------------
