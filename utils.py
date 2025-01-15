@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.distributions import Distribution
+import random
+import numpy as np
 
 CONST_EPS = 1e-10
 
@@ -24,3 +26,4 @@ def log_prob_func(
         return log_prob
     else:
         return log_prob.sum(-1, keepdim=True)
+

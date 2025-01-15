@@ -56,18 +56,18 @@ class ValueLearner:
         self, path: str
     ) -> None:
         torch.save(self._value.state_dict(), path)
-        print('Value parameters saved in {}'.format(path))
+        print('Value parameters saved to {}'.format(path))
 
 
     def load(
         self, path: str
     ) -> None:
         self._value.load_state_dict(torch.load(path, map_location=self._device))
-        print('Value parameters loaded')
+        print('Value parameters loaded from {}'.format(path))
 
 
 
-class QLearner:
+class QSarsaLearner:
     _device: torch.device
     _Q: QMLP
     _optimizer: torch.optim
@@ -118,7 +118,20 @@ class QLearner:
     def loss(
         self, memory: ReplayMemory, pi
     ) -> torch.Tensor:
-        raise NotImplementedError
+        state_batch, action_batch, reward_batch, next_state_batch = memory.sample(self._batch_size)
+        state_batch = torch.FloatTensor(state_batch).to(self._device)
+        next_state_batch = torch.FloatTensor(next_state_batch).to(self._device)
+        action_batch = torch.FloatTensor(action_batch).to(self._device)
+        reward_batch = torch.FloatTensor(reward_batch).to(self._device).unsqueeze(1)
+        
+        with torch.no_grad():
+            target_Q_value = reward_batch + 1 * self._gamma * self._target_Q(next_state_batch, action_batch)
+        
+        Q = self._Q(state_batch, action_batch)
+        
+        loss = F.mse_loss(Q, target_Q_value)
+        
+        return loss
 
 
     def update(
@@ -141,103 +154,12 @@ class QLearner:
         self, path: str
     ) -> None:
         torch.save(self._Q.state_dict(), path)
-        print('Q function parameters saved in {}'.format(path))
-    
+        print('Q function parameters saved to {}'.format(path))
+
 
     def load(
         self, path: str
     ) -> None:
         self._Q.load_state_dict(torch.load(path, map_location=self._device))
         self._target_Q.load_state_dict(self._Q.state_dict())
-        print('Q function parameters loaded')
-
-
-
-class QSarsaLearner(QLearner):
-    def __init__(
-        self,
-        device: torch.device,
-        state_dim: int,
-        action_dim: int,
-        hidden_dim: int,
-        depth: int,
-        Q_lr: float,
-        target_update_freq: int,
-        tau: float,
-        gamma: float,
-        batch_size: int
-    ) -> None:
-        super().__init__(
-        device = device,
-        state_dim = state_dim,
-        action_dim = action_dim,
-        hidden_dim = hidden_dim,
-        depth = depth,
-        Q_lr = Q_lr,
-        target_update_freq = target_update_freq,
-        tau = tau,
-        gamma = gamma,
-        batch_size = batch_size
-        )
-
-
-    def loss(
-        self, memory: ReplayMemory, pi
-    ) -> torch.Tensor:
-        state_batch, action_batch, reward_batch, next_state_batch = memory.sample(self._batch_size)
-        state_batch = torch.FloatTensor(state_batch).to(self._device)
-        next_state_batch = torch.FloatTensor(next_state_batch).to(self._device)
-        action_batch = torch.FloatTensor(action_batch).to(self._device)
-        reward_batch = torch.FloatTensor(reward_batch).to(self._device).unsqueeze(1)
-        
-        with torch.no_grad():
-            target_Q_value = reward_batch + 1 * self._gamma * self._target_Q(next_state_batch, action_batch)
-        
-        Q = self._Q(state_batch, action_batch)
-        
-        loss = F.mse_loss(Q, target_Q_value)
-        
-        return loss
-
-
-
-class QPiLearner(QLearner):
-    def __init__(
-        self,
-        device: torch.device,
-        state_dim: int,
-        action_dim: int,
-        hidden_dim: int,
-        depth: int,
-        Q_lr: float,
-        target_update_freq: int,
-        tau: float,
-        gamma: float,
-        batch_size: int
-    ) -> None:
-        super().__init__(
-        device = device,
-        state_dim = state_dim,
-        action_dim = action_dim,
-        hidden_dim = hidden_dim,
-        depth = depth,
-        Q_lr = Q_lr,
-        target_update_freq = target_update_freq,
-        tau = tau,
-        gamma = gamma,
-        batch_size = batch_size
-        )
-
-
-    #def loss(
-    #    self, replay_buffer: OnlineReplayBuffer, pi
-    #) -> torch.Tensor:
-    #    s, a, r, s_p, _, not_done, _, _ = replay_buffer.sample(self._batch_size)
-    #    a_p = pi.select_action(s_p, is_sample=True)
-    #    with torch.no_grad():
-    #        target_Q_value = r + not_done * self._gamma * self._target_Q(s_p, a_p)
-    #    
-    #    Q = self._Q(s, a)
-    #    loss = F.mse_loss(Q, target_Q_value)
-    #    
-    #    return loss
+        print('Q function parameters loaded from {}'.format(path))

@@ -7,14 +7,12 @@ This file contains six functions:
 
 - generate_initial_y(x): Generate the initial state y(0, x).
 - generate_control_sequence(x, t): Generate control sequence u(t, x).
-- burgers_update(y, u, dx, dt, nu=0.01): Return the updated state vector y using the Lax-Friedrichs algorithm with viscosity.
+- burgers_update(y, u, dx, dt, nu=0.01): Return the updated state vector y.
 - get_trajectory(y0, nt = 500, dt= 0.001, nx = 128, dx = 10/128): Generate a single trajectory of the Burgers equation.
 - load_burgers(): Generate multiple trajectories of the Burgers equation.
 - visualize_state_trajectory(): Visualize the state trajectory with animation.
 
 The most important ones are burgers_update(), get_trajectory() and load_burgers().
-
-You can also direcly run this file, which will show an animation of the state evolution. You can also import the functions from elsewhere.
 '''
 
 
@@ -261,7 +259,7 @@ def visualize_state_trajectory(x, Y, dt, nt, frame_interval=20):
     # Animation update function
     def update(frame):
         line.set_ydata(Y[frame])
-        time_text.set_text(f'Current Time: {frame * dt:.3f}/{nt*dt:.3f}')  # 更新时间提示
+        time_text.set_text(f'Current Time: {frame * dt:.3f}/{nt*dt:.3f}')
         return line, time_text
 
     # Create the animation
@@ -346,7 +344,6 @@ def load_burgers_data_sampled(
     Y_bar_list = [] # Holds states trajectories of N samples
     Y_f_list = [] # Holds final state of N samples
     U_list = [] # Holds control sequence trajectories of N samples
-    Y_bar_next_list = [] # Holds next state of N samples
 
     # Simulate the system for N samples
     for _ in tqdm.tqdm(range(N), desc="Generating trajectories"):
@@ -356,14 +353,12 @@ def load_burgers_data_sampled(
         Y_bar_list.append(state_trajectory) # Append the state trajectory to Y_bar_list
         Y_f_list.append(final_state) # Append the final state to Y_f_list
         U_list.append(action_trajectory) # Append the control sequence to U_list
-        Y_bar_next_list.append(np.concatenate([state_trajectory[1:,:], final_state[np.newaxis,:]], axis=0)) # Append the next state to Y_bar_next_list
         
     # Save the data into a dictionary
     data_dict = { # d4rl API
             'observations': np.stack(Y_bar_list), # (N, nt1, n)
             'actions': np.stack(U_list), # (N, nt1, n)
             'Y_f': np.stack(Y_f_list), # (N, n)
-            'next_observations': np.stack(Y_bar_next_list), # (N, nt1, n)
             'meta_data': {
                 'spatial domain': x_range,
                 'num_nodes': nx,
@@ -378,7 +373,6 @@ def load_burgers_data_sampled(
     print("Observations shape: ", data_dict['observations'].shape) # (N, nt1, n)
     print("Y_f shape: ", data_dict['Y_f'].shape) # (N, n)
     print("Actions shape: ", data_dict['actions'].shape) # (N, nt1, n)
-    print("Next observations shape: ", data_dict['next_observations'].shape) # (N, nt1, n)
 
     if save_dir is not None:
         import os
@@ -401,7 +395,7 @@ def load_burgers_data_sampled(
 
 
 if __name__ == '__main__':
-    load_burgers_data_sampled(N=50,save_dir='./data123')
+    load_burgers_data_sampled(N=50,save_dir='./datasets')
 
 
 # -------------------test----------------------------------------------

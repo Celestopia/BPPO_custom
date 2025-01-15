@@ -96,7 +96,7 @@ class GaussPolicyMLP(nn.Module):
     ) -> None:
         super().__init__()
         self._net = MLP(state_dim, hidden_dim, depth, (2 * action_dim), 'none')
-        self._log_std_bound = (-5., 0.)
+        self._log_std_bound = (-10., 50.)
 
 
     def forward(
@@ -109,7 +109,7 @@ class GaussPolicyMLP(nn.Module):
             #x = torch.tanh(x)
             x = low + 0.5 * (high - low) * (x + 1)
             return x
-        log_std = soft_clamp(log_std, self._log_std_bound) # The log_std is clamped to be within (-5, 0) to prevent numerical instability.
+        log_std = torch.clamp(log_std, min=self._log_std_bound[0], max=self._log_std_bound[1]) # The log_std is clamped to be within (-5, 5) to prevent numerical instability.
         std = log_std.exp()
 
         dist = Normal(mu, std)

@@ -1,8 +1,7 @@
 import numpy as np
 
 class ReplayMemory:
-    def __init__(self, max_size=1000000):
-        self.max_size = max_size
+    def __init__(self):
         self.states = None
         self.actions = None
         self.rewards = None
@@ -27,8 +26,8 @@ class ReplayMemory:
         Samples a batch of experiences from memory.
         '''
         ind = np.random.randint(0, self.size, size=batch_size)
-        state_batch = self.states[ind] # (batch_size, 2*state_dim+1)
+        state_batch = self.states[ind] # (batch_size, state_dim)
         action_batch = self.actions[ind] # (batch_size, action_dim)
         reward_batch = self.rewards[ind] # (batch_size, 1)
-        next_state_batch = self.next_states[ind] # (batch_size, 2*state_dim+1)
+        next_state_batch = self.next_states[ind] # (batch_size, state_dim)
         return state_batch, action_batch, reward_batch, next_state_batch

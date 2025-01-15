@@ -1,0 +1,75 @@
+{
+    "Results": {
+        "BPPO": {
+            "bppo_target_loss": 0.00015640833782402908,
+            "bppo_energy;": 0.26642275335639715
+        },
+        "BC": {
+            "bc_target_loss": 0.00015226019560495789,
+            "bc_energy": 0.2758609832912684
+        },
+        "Natural Evolution": {
+            "natural_target_loss": 0.005084369734982607,
+            "natural_energy": 0.0
+        }
+    },
+    "Experiment Settings": {
+        "dataset_name": "kuramoto",
+        "seed": 20250112,
+        "train_data_path": "datasets\\kuramoto_99900_15_8_8.pkl",
+        "test_data_path": "datasets\\kuramoto_100_15_8_8.pkl",
+        "result_dir": "logs",
+        "model_save_dir": "logs\\kuramoto\\event_1736940284",
+        "log_dir": "logs\\kuramoto\\event_1736940284",
+        "fig_save_dir": "logs\\kuramoto\\event_1736940284\\figs",
+        "log_freq": 1000
+    },
+    "Value Network Settings": {
+        "v_steps": 100000,
+        "v_hidden_dim": 512,
+        "v_depth": 3,
+        "v_lr": 0.0001,
+        "v_batch_size": 64
+    },
+    "Q Network Settings": {
+        "q_bc_steps": 100000,
+        "q_pi_steps": 10,
+        "q_hidden_dim": 512,
+        "q_depth": 3,
+        "q_lr": 0.0001,
+        "q_batch_size": 64,
+        "target_update_freq": 2,
+        "tau": 0.005,
+        "gamma": 0.99
+    },
+    "BC Settings": {
+        "bc_steps": 100000,
+        "bc_lr": 0.0001,
+        "bc_hidden_dim": 512,
+        "bc_depth": 3,
+        "bc_batch_size": 64
+    },
+    "BPPO Settings": {
+        "bppo_steps": 20000,
+        "bppo_hidden_dim": 512,
+        "bppo_depth": 3,
+        "bppo_lr": 0.0001,
+        "bppo_batch_size": 64,
+        "clip_ratio": 0.25,
+        "entropy_weight": 0.0,
+        "decay": 0.96,
+        "omega": 0.9,
+        "is_clip_decay": true,
+        "is_bppo_lr_decay": true,
+        "is_update_old_policy": true
+    },
+    "Others": {
+        "N": 99900,
+        "state_dim": 8,
+        "action_dim": 8,
+        "nt": 15,
+        "action_reward_scale": 0.001,
+        "average state reward": -0.012453448851774575,
+        "average action reward": -0.03197800343145079
+    }
+}
